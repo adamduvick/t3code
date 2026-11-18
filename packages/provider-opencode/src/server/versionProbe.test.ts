@@ -37,6 +37,10 @@ describe("OpenCode version probe", () => {
       generation: "v2",
       version: "2.0.18",
     });
+    assert.deepStrictEqual(classifyOpenCodeCliVersion("0.0.0-main-202606291941\n"), {
+      generation: "v1",
+      version: "0.0.0-main-202606291941",
+    });
     assert.isUndefined(classifyOpenCodeCliVersion("opencode dev build\n"));
   });
 

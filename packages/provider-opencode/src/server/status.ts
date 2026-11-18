@@ -14,7 +14,6 @@ import * as Option from "effect/Option";
 import * as Schedule from "effect/Schedule";
 
 import { createModelCapabilities } from "@t3tools/shared/model";
-import { compareSemverVersions } from "@t3tools/shared/semver";
 import {
   buildServerProvider,
   COMPACT_SLASH_COMMAND,
@@ -823,7 +822,7 @@ export const checkOpenCodeProviderStatus = Effect.fn("checkOpenCodeProviderStatu
   if (probed.generation === "v2") {
     return yield* checkOpenCode2(openCodeSettings, probed.version, checkedAt, loadOpenCode2Models);
   }
-  if (compareSemverVersions(probed.version, OpenCodeRuntime.MINIMUM_OPENCODE_VERSION) < 0) {
+  if (!OpenCodeRuntime.isSupportedOpenCodeV1Version(probed.version)) {
     return buildServerProvider({
       presentation: OPENCODE_PRESENTATION,
       enabled: openCodeSettings.enabled,

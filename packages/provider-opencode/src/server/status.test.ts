@@ -1110,6 +1110,17 @@ it.layer(layerTest)("checkOpenCodeProviderStatus with configured server URL", (i
       NodeAssert.equal(runtimeMock.state.sdkClientInputs.length, 0);
     }),
   );
+
+  it.effect("loads inventory for a sufficiently new date-stamped build", () =>
+    Effect.gen(function* () {
+      runtimeMock.state.versionStdout = "0.0.0-main-202606291941\n";
+      const snapshot = yield* checkProvider(makeOpenCodeSettings());
+
+      NodeAssert.doesNotMatch(snapshot.message ?? "", /too old/);
+      NodeAssert.equal(runtimeMock.state.startCalls, 1);
+      NodeAssert.equal(runtimeMock.state.sdkClientInputs.length, 1);
+    }),
+  );
 });
 
 const builtinCommands = [

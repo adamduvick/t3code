@@ -40,6 +40,39 @@ function makeHealthClient(
 }
 
 describe("verifyOpenCodeServerVersion", () => {
+  effectIt.effect("accepts a sufficiently new date-stamped build", () =>
+    Effect.gen(function* () {
+      for (const version of ["0.0.0-dev-202604200720", "0.0.0-main-202606291941"]) {
+        const result = yield* OpenCodeRuntime.verifyOpenCodeServerVersion(
+          makeHealthClient(() => Promise.resolve({ data: { healthy: true, version } })),
+        );
+        expect(result).toBe(version);
+      }
+    }),
+  );
+
+  effectIt.effect("rejects date-stamped builds before the supported cutoff", () =>
+    Effect.gen(function* () {
+      const error = yield* OpenCodeRuntime.verifyOpenCodeServerVersion(
+        makeHealthClient(() =>
+          Promise.resolve({ data: { healthy: true, version: "0.0.0-dev-202604200719" } }),
+        ),
+      ).pipe(Effect.flip);
+      expect(error.detail).toContain("v0.0.0-dev-202604200719 is too old");
+    }),
+  );
+
+  effectIt.effect("rejects malformed date-stamped build versions", () =>
+    Effect.gen(function* () {
+      const error = yield* OpenCodeRuntime.verifyOpenCodeServerVersion(
+        makeHealthClient(() =>
+          Promise.resolve({ data: { healthy: true, version: "0.0.0-main-20260420072" } }),
+        ),
+      ).pipe(Effect.flip);
+      expect(error.detail).toContain("v0.0.0-main-20260420072 is too old");
+    }),
+  );
+
   effectIt.effect("rejects a server below the supported version", () =>
     Effect.gen(function* () {
       const error = yield* OpenCodeRuntime.verifyOpenCodeServerVersion(

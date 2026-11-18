@@ -42,7 +42,20 @@ const encodeUnknownJsonStringExit = Schema.encodeUnknownExit(Schema.fromJsonStri
 const OPENCODE_EMPTY_CONFIG_CONTENT = "{}";
 
 export const MINIMUM_OPENCODE_VERSION = "1.14.19";
+const MINIMUM_OPENCODE_DATE_STAMPED_BUILD = "202604200720";
+const OPENCODE_DATE_STAMPED_VERSION = /^0\.0\.0-(?:main|dev|beta)-(\d{12})$/;
 const OPENCODE_HEALTH_TIMEOUT = "5 seconds";
+
+export function parseOpenCodeDateStampedVersion(value: string): string | undefined {
+  return OPENCODE_DATE_STAMPED_VERSION.exec(value.trim())?.[0];
+}
+
+export function isSupportedOpenCodeV1Version(version: string): boolean {
+  const buildTimestamp = OPENCODE_DATE_STAMPED_VERSION.exec(version)?.[1];
+  return buildTimestamp !== undefined
+    ? buildTimestamp >= MINIMUM_OPENCODE_DATE_STAMPED_BUILD
+    : compareSemverVersions(version, MINIMUM_OPENCODE_VERSION) >= 0;
+}
 
 const OpenCodeHealthSchema = Schema.Struct({
   healthy: Schema.Literal(true),
@@ -190,7 +203,7 @@ export const verifyOpenCodeServerVersion = Effect.fn("verifyOpenCodeServerVersio
       detail: `OpenCode server returned an invalid version. T3 Code requires OpenCode v${MINIMUM_OPENCODE_VERSION} or newer.`,
     });
   }
-  if (compareSemverVersions(health.version, MINIMUM_OPENCODE_VERSION) < 0) {
+  if (!isSupportedOpenCodeV1Version(health.version)) {
     return yield* new OpenCodeRuntimeError({
       operation: "global.health",
       detail: `OpenCode v${health.version} is too old. Upgrade to v${MINIMUM_OPENCODE_VERSION} or newer.`,
